@@ -1,3 +1,5 @@
+/* eslint-disable import/no-unresolved */
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable prefer-const */
 /* eslint-disable react/no-children-prop */
 /* eslint-disable object-curly-newline */
