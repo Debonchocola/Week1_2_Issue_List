@@ -1,229 +1,57 @@
-# Week 1-2. issue list
+## 1주차 2번째 과제(Issue_List) 구현사항
 
-1. [팀 소개 👫](#1-팀-소개-)
-2. [프로젝트 소개 🚀](#2-프로젝트-소개-)
-3. [기술 스택 🛠](#3-기술-스택-)
-4. [구현 기능 📍](#4-구현-기능-)
-5. [프로젝트 구조 🗂](#5-프로젝트-구조-)
-6. [Best Practice 선정과정👩‍👦‍👦](#6-best-practice-선정과정)
-7. [프로젝트 설치 및 실행 ✨](#7-프로젝트-설치-및-실행-)  
+</br>
 
-<br/>
+# 이슈목록화면
 
-- [🌍 배포 링크](https://2nd-assignment.vercel.app/)
-- [📄 팀 노션](https://plain-airboat-3f4.notion.site/10-27-Todo-f9fb2a1265e54c33b0b73c306c230042)
+</br>
 
-<br />
-
-
-
-## 1. 팀 소개 👫
-
-- [이빛나 (팀장)](https://github.com/bitnaleeeee)
-- [모상빈](https://github.com/Topbin2)
-- [김진석](https://github.com/genuine-seok)
-- [박우빈](https://github.com/Debonchocola)
-- [이의연](https://github.com/strongpond)
-- [조성호](https://github.com/CSH111)
-- [전대원](https://github.com/eodnjs467)
-
-<br />
-
-## 2. 프로젝트 소개 🚀
-
-- 개요 : 원티드 프론트엔드 프리온보딩 7기 1팀 과제 1-2 중 Best Practice
-- 주제 : 특정 깃헙 레파지토리의 이슈 목록과 상세 내용을 확인하는 웹 사이트 구축
-- 기간 : 2022.10.29 ~ 2022.10.30
-
-<br />
-
-
-## 3. 기술 스택 🛠
-
-- React
-- Typescript
-- Styled-Components
-
-<br />
-
-## 4. 구현 기능 📍
-
-- 이슈 목록 페이지 구현
-  - 무한스크롤
-  - 광고배너 삽입
-- 상세 이슈 페이지 구현
-- Context API를 활용한 이슈 상태관리 및 API 연동
-- 데이터 요청 중 로딩 표시
-- 에러 화면 구현
-- 지정조건에 맞게 데이터 요청 및 표시
-- 반응형 웹 구현
-
-<br />
-
-## 5. 프로젝트 구조 🗂
-
-```bash
-src
-├── apis  // issue 관련 api service 요청
-├── assets  // 전역 스타일링
-├── components  // 공용 컴포넌트
-├── context // issue 상태관리 context
-├── hooks // scroll 관련 커스텀 훅
-├── pages // 페이지 및 페이지 고유 컴포넌트
-├── types // 공용타입 관리
-└── utils // dateformatting, axios 관련 유틸 함수
-```
-
-<br/>
-
-
-## 6. Best Practice 선정과정👩‍👦‍👦
-
-  ### 선정이유 1 - 무한스크롤
-  
-  ```javascript
-export const useInfiniteScroll = (
-  onIntersect: () => void,
-  options?: IntersectionObserverInit
-) => {
-  const [target, setTarget] = useState<Element | null>(null);
-
-  const handleIntersect = useCallback(
-    ([entry]: IntersectionObserverEntry[]) => {
-      if (entry.isIntersecting) {
-        onIntersect();
-      }
-    },
-    [onIntersect]
-  );
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(handleIntersect, options);
-    target && observer.observe(target);
-    return () => {
-      observer.disconnect();
-    };
-  }, [handleIntersect, target, options]);
-
-  return [setTarget];
-};
-```
-#### 코멘트
-  - `Intersection Opserver API` 활용해 scrollEvent를 이용한 것에 비해 최적화를 효율적으로 적용한 점이 좋았습니다. - 박우빈
-  - 재사용성을 위해 커스텀훅으로 분리한 부분이 좋았습니다. - 김진석
-
-<br>
-
-### 선정이유 2 - Context API를 활용한 API 연동
-- `Context API` `useReducer` 를 활용하여 `Flux 패턴`으로 서버 데이터 관리 
+- ### 이슈목록 불러오기
 
 ```javascript
-export enum IssueActionTypes {
-  GET_ISSUE_LIST_SUCCESS = "GET_ISSUES_LIST_SUCCESS",
-  GET_ISSUE_LIST_LOADING = "GET_ISSUES_LIST_LOADING",
-  GET_ISSUE_LIST_ERROR = "GET_ISSUES_LIST_ERROR",
+//IssueList.js
+const IssueList = () => {
+  const [issues, setIssues] = useState();
+  const navigate = useNavigate();
 
-  GET_ISSUE_DETAIL_SUCCESS = "GET_ISSUES_DETAIL_SUCCESS",
-  GET_ISSUE_DETAIL_LOADING = "GET_ISSUES_DETAIL_LOADING",
-  GET_ISSUE_DETAIL_ERROR = "GET_ISSUES_DETAIL_ERROR",
+  const getIssue = async (page = 1) => {
+    await axios
+      .get(
+        `https://api.github.com/repos/angular/angular-cli/issues?sort=comments&per_page=20&page=${page}`
+      )
+      .then((result) => {
+        if (result.status !== 200) navigate('/*');
+        return setIssues(result.data);
+      });
+  };
+  useEffect(() => {
+    getIssue();
+  }, []);
+```
+
+Issue목록을 불러오는 Get요청입니다. 코멘트 수를 기준으로 정렬을 했고, 한 페이지에 20개씩 뜨도록 했습니다.
+잘못된 경로일 경우 에러페이지로 이동하도록 했습니다. useEffect를 통해 렌더링 될때 마다 뜰 수 있도록 했습니다.
+</br>
+
+- ### 이슈목록에 필요한 요소만 이슈 아이템으로 보내기
+
+```javascript
+//IssueList.js
+{
+  issues &&
+    issues.map((issue, i) => (
+      <IssueItem
+        id={issue.id}
+        title={issue.title}
+        writer={issue.user.login}
+        date={issue.created_at}
+        comments={issue.comments}
+        AdBanner={i === 3}
+      />
+    ));
 }
-
-const initialState: IssueCtxInitialState = {
-  isLoading: false,
-  isError: false,
-  issueList: [],
-  issueDetail: null,
-};
-
-const issueReducer = (
-  state: IssueCtxInitialState,
-  action: { type: IssueActionTypes; data?: Issue[] | Issue }
-) => {
-  switch (action.type) {
-    case IssueActionTypes.GET_ISSUE_LIST_LOADING:
-      return {
-        ...state,
-        isLoading: true,
-        isError: false,
-      };
-    case IssueActionTypes.GET_ISSUE_LIST_SUCCESS:
-      return {
-        ...state,
-        issueList: [...state.issueList, ...(action.data as Issue[])],
-        isLoading: false,
-        isError: false,
-      };
-    case IssueActionTypes.GET_ISSUE_LIST_ERROR:
-      return {
-        ...state,
-        isLoading: false,
-        isError: true,
-      };
-    case IssueActionTypes.GET_ISSUE_DETAIL_LOADING:
-      return {
-        ...state,
-        isLoading: true,
-        isError: false,
-      };
-    case IssueActionTypes.GET_ISSUE_DETAIL_SUCCESS:
-      return {
-        ...state,
-        issueDetail: action.data as Issue,
-        isLoading: false,
-        isError: false,
-      };
-    case IssueActionTypes.GET_ISSUE_DETAIL_ERROR:
-      return {
-        ...state,
-        isLoading: false,
-        isError: true,
-      };
-    default:
-      throw new Error("action type을 확인해주세요.");
-  }
-};
-
-const IssueStateContext = createContext<IssueCtxInitialState>(initialState);
-const IssueDispatchContext = createContext<React.Dispatch<{
-  type: IssueActionTypes;
-  data?: Issue[] | Issue;
-}> | null>(null);
-
-export const IssueProvider = ({ children }: { children: JSX.Element }) => {
-  const [state, dispatch] = useReducer(issueReducer, initialState);
-  return (
-    <IssueStateContext.Provider value={state}>
-      <IssueDispatchContext.Provider value={dispatch}>
-        {children}
-      </IssueDispatchContext.Provider>
-    </IssueStateContext.Provider>
-  );
-};
-```
-#### 코멘트
-  - 단방향 데이터 흐름으로 복잡성을 줄인점이 인상적이었습니다. - 조성호
-
-<br>
-
-## 7. 프로젝트 설치 및 실행 ✨
-
-<br/>
-
-1. Git Clone
-
-```plaintext
-$ git clone https://github.com/pre-onboading-2team/Week1_2_Issue_List.git
 ```
 
-2. 프로젝트 패키지 설치
-
-```plaintext
-$ npm install
-```
-
-3. 프로젝트 실행
-
-```plaintext
-$ npm start
-```
-
+데이터를 담은 issues를 map으로 묶어서 필요한 요소만 뽑아서 IssueItem에 담아줬습니다.
+광고 배너를 5번째칸에 띄우기 위해서 index 3이면 들어가도록 해주었습니다.
+</br>
